@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  *
@@ -52,7 +53,7 @@ public class UsrIfoDatebase {
         database.close();
         try {
             cursor.close();
-        }catch (Exception e)
+        }catch (NullPointerException e)
         {
             Log.e(" ","cursor.close");
         }
@@ -62,9 +63,80 @@ public class UsrIfoDatebase {
     public void creat_tab()
     {
         helper = new DataBaseHelper(context,database_name);
-        database = helper.getReadableDatabase();
-        database.execSQL("CREATE TABLE "+DATABASE_TABNAME+" (_id INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT, ifoname TEXT, ifovalue TEXT);");
+        database = helper.getWritableDatabase();
+        database.execSQL("CREATE TABLE "+DATABASE_TABNAME+"(_id integer primary key autoincrement, ifoname TEXT, ifovalue TEXT);");
         database.close();
     }
 
+    public void insert_data(String ifoname,String ifovalue)
+    {
+        helper = new DataBaseHelper(context,database_name);
+        database = helper.getWritableDatabase();
+//        database.execSQL("insert into "+DATABASE_TABNAME+"(ifoname, ifovalue) values('test','ok')",null);
+        ContentValues contentvalues = new ContentValues();
+        contentvalues.put("ifoname",ifoname);
+        contentvalues.put("ifovalue",ifovalue);
+        database.insert(DATABASE_TABNAME,null,contentvalues);
+        database.close();
+    }
+
+    public boolean update_data(String ifoname,String ifovalue)
+    {
+        helper = new DataBaseHelper(context,database_name);
+        database = helper.getWritableDatabase();
+        if(query_data(ifoname).getAsInteger("id") != null)
+        {
+            int id = query_data(ifoname).getAsInteger("id");
+            ContentValues rifovalue = new ContentValues();
+            rifovalue.put("ifovalue",ifovalue);
+            database.update(DATABASE_TABNAME,rifovalue,"_id="+String.valueOf(id),null);
+            database.close();
+            return true;
+        }
+        else
+        {
+            database.close();
+            Toast.makeText(context, "未找到数据", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
+    public boolean delete_data(String ifoname)
+    {
+        helper = new DataBaseHelper(context,database_name);
+        database = helper.getWritableDatabase();
+        if(query_data(ifoname).getAsInteger("id") != null)
+        {
+            int id = (int) query_data(ifoname).get("id");
+            database.delete(DATABASE_TABNAME,"_id="+id,null);
+            database.close();
+            return true;
+        }
+        else
+        {
+            Toast.makeText(context, "未找到数据", Toast.LENGTH_SHORT).show();
+            database.close();
+            return false;
+        }
+    }
+    public ContentValues query_data(String ifoname)
+    {
+        helper = new DataBaseHelper(context,database_name);
+        database = helper.getReadableDatabase();
+        Cursor all_cursor = database.rawQuery("select * from "+DATABASE_TABNAME,null);
+        ContentValues contentValues = new ContentValues();
+        while (all_cursor.moveToNext())
+        {
+            if(all_cursor.getCount() != 0 && all_cursor.getString(1).equals(ifoname))
+            {
+                int id = all_cursor.getInt(0);
+                String rifoname = all_cursor.getString(1);
+                String rifovalue = all_cursor.getString(2);
+                contentValues.put("id",id);
+                contentValues.put("ifoname",rifoname);
+                contentValues.put("ifovalue",rifovalue);
+            }
+
+        }
+        return contentValues;
+    }
 }

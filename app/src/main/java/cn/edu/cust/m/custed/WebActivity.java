@@ -6,6 +6,7 @@ import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
@@ -15,7 +16,9 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.View;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.Toast;
 
 import cn.edu.cust.m.custed.database.DataBaseHelper;
@@ -54,10 +57,6 @@ public class WebActivity extends AppCompatActivity {
         webMain.initWebView();
         webMain.onLoad();
         usrIfoDatebase = new UsrIfoDatebase(WebActivity.this,"usr");
-        if(!usrIfoDatebase.is_datebase_tab_exist())
-        {
-            show_dialog("提示","第一次启动","确定",5);
-        }
 
     }
 
@@ -147,11 +146,6 @@ public class WebActivity extends AppCompatActivity {
                 }
                 dialog.dismiss();
                 break;
-            }
-            case 5: {
-                usrIfoDatebase.creat_tab();
-                Toast.makeText(this, "已创建表", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
             }
             default: {
                 dialog.dismiss();
