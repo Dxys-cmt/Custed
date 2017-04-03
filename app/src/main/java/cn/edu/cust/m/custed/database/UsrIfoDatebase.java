@@ -1,12 +1,13 @@
 package cn.edu.cust.m.custed.database;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.widget.Toast;
+
+import static cn.edu.cust.m.custed.MyConstant.DATABASE_TABNAME;
 
 /**
  *
@@ -20,7 +21,7 @@ public class UsrIfoDatebase {
     private DataBaseHelper helper;
     private SQLiteDatabase database;
 
-    private static final String DATABASE_TABNAME = "UsrIfo";
+
 
 
     public UsrIfoDatebase(Context context,String database_name)
@@ -63,7 +64,8 @@ public class UsrIfoDatebase {
     public void creat_tab()
     {
         helper = new DataBaseHelper(context,database_name);
-        database = helper.getWritableDatabase();
+        database = helper.getReadableDatabase();
+        Toast.makeText(context, database_name, Toast.LENGTH_SHORT).show();
         database.execSQL("CREATE TABLE "+DATABASE_TABNAME+"(_id integer primary key autoincrement, ifoname TEXT, ifovalue TEXT);");
         database.close();
     }
@@ -72,11 +74,16 @@ public class UsrIfoDatebase {
     {
         helper = new DataBaseHelper(context,database_name);
         database = helper.getWritableDatabase();
-//        database.execSQL("insert into "+DATABASE_TABNAME+"(ifoname, ifovalue) values('test','ok')",null);
-        ContentValues contentvalues = new ContentValues();
-        contentvalues.put("ifoname",ifoname);
-        contentvalues.put("ifovalue",ifovalue);
-        database.insert(DATABASE_TABNAME,null,contentvalues);
+        if(query_data(ifoname).getAsString("ifovalue") == null) {
+            ContentValues contentvalues = new ContentValues();
+            contentvalues.put("ifoname", ifoname);
+            contentvalues.put("ifovalue", ifovalue);
+            database.insert(DATABASE_TABNAME, null, contentvalues);
+        }
+        else
+        {
+            update_data(ifoname,ifovalue);
+        }
         database.close();
     }
 
@@ -96,7 +103,6 @@ public class UsrIfoDatebase {
         else
         {
             database.close();
-            Toast.makeText(context, "未找到数据", Toast.LENGTH_SHORT).show();
             return false;
         }
     }
@@ -113,7 +119,6 @@ public class UsrIfoDatebase {
         }
         else
         {
-            Toast.makeText(context, "未找到数据", Toast.LENGTH_SHORT).show();
             database.close();
             return false;
         }

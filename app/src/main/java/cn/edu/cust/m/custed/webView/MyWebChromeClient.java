@@ -20,6 +20,9 @@ import android.widget.Toast;
 import cn.edu.cust.m.custed.WebActivity;
 import cn.edu.cust.m.custed.utils.MyPermissionCheck;
 
+import static cn.edu.cust.m.custed.MyConstant.FILECHOOSER_RESULTCODE;
+import static cn.edu.cust.m.custed.MyConstant.QUEST_CODE_READ_STORAGE;
+
 /**
  * Created by dxys on 17/3/30.
  */
@@ -40,7 +43,7 @@ public class MyWebChromeClient extends WebChromeClient {
     public MyWebChromeClient(WebActivity webActivity)
     {
         this.webActivity = webActivity;
-        this.request_code = webActivity.FILECHOOSER_RESULTCODE;
+        this.request_code = FILECHOOSER_RESULTCODE;
     }
 
     /**
@@ -87,17 +90,17 @@ public class MyWebChromeClient extends WebChromeClient {
         i = new Intent(Intent.ACTION_GET_CONTENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType(type);
-        webActivity.choose_file_intent(i,request_code);
+        webActivity.start_intent(i,request_code);
     }
 
     public void open_file_choose_intent_aboveL(String[] type)
     {
-        if(new MyPermissionCheck(webActivity).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE, MyPermissionCheck.QUEST_CODE_READ_STORAGE))
+        if(new MyPermissionCheck(webActivity).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE, QUEST_CODE_READ_STORAGE))
         {
             i = new Intent(Intent.ACTION_GET_CONTENT);
             i.addCategory(Intent.CATEGORY_OPENABLE);
             i.setType(type[0]);
-            webActivity.choose_file_intent(i,request_code);
+            webActivity.start_intent(i,request_code);
         }
         else
         {

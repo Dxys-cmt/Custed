@@ -20,7 +20,7 @@ import cn.edu.cust.m.custed.WebActivity;
 
 public class MyPermissionCheck {
 
-    public static final int QUEST_CODE_READ_STORAGE = 1;
+
     private WebActivity webActivity;
 
     public MyPermissionCheck(WebActivity webActivity)
@@ -28,7 +28,7 @@ public class MyPermissionCheck {
         this.webActivity = webActivity;
     }
 
-    public boolean isPermissionGranted(String permissionName, int questCode){
+    public boolean isPermissionGranted(String permissionName, int questCo){
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
             return true;
         }

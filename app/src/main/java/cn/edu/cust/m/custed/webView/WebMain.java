@@ -2,19 +2,26 @@ package cn.edu.cust.m.custed.webView;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+
+import java.io.File;
 
 import cn.edu.cust.m.custed.R;
 import cn.edu.cust.m.custed.WebActivity;
+import cn.edu.cust.m.custed.utils.FileUtils;
 import cn.edu.cust.m.custed.utils.NetUtils;
 
 /**
@@ -27,6 +34,7 @@ public class WebMain {
     private String url;
     private MyWebChromeClient myWebChromeClient;
     private WebActivity webactivity;
+    private boolean cookie_clean_kay = true;
 
 
     /**
@@ -62,12 +70,11 @@ public class WebMain {
         // webView.getSettings().setBlockNetworkImage(true); //Õº∆¨º”‘ÿƒ£ Ω£¨¥˝≤‚ ‘
 
         webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
-        webView.getSettings().setSupportMultipleWindows(true);
+        webView.getSettings().setSupportMultipleWindows(false);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setAppCacheEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
-        webView.getSettings().setBuiltInZoomControls(true);
+        webView.getSettings().setBuiltInZoomControls(false);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setUserAgentString(webView.getSettings().getUserAgentString() + "; CustedAPP");
         webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
@@ -105,6 +112,7 @@ public class WebMain {
         }
         CookieManager cookieManager = CookieManager.getInstance();
         String cookie = cookieManager.getCookie(url);
+
         if (TextUtils.isEmpty(cookie)) {
         } else {
             cookieManager.setCookie(url, cookie);
@@ -151,6 +159,8 @@ public class WebMain {
                  */
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
+
+
                     super.onPageStarted(view, url, favicon);
                 }
 
