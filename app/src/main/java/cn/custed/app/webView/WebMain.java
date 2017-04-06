@@ -1,32 +1,25 @@
-package cn.edu.cust.m.custed.webView;
+package cn.custed.app.webView;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
-import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
-import java.io.File;
-
+import cn.custed.app.WebActivity;
+import cn.custed.app.utils.NetUtils;
 import cn.edu.cust.m.custed.R;
-import cn.edu.cust.m.custed.WebActivity;
-import cn.edu.cust.m.custed.utils.FileUtils;
-import cn.edu.cust.m.custed.utils.NetUtils;
 
 /**
  * Created by dxys on 17/3/29.
- * webview ÅäÖÃÀà
+ * webview é…ç½®ç±»
  */
 
 public class WebMain {
@@ -34,16 +27,10 @@ public class WebMain {
     private String url;
     private MyWebChromeClient myWebChromeClient;
     private WebActivity webactivity;
-    private boolean cookie_clean_kay = true;
+    private boolean cache_switch_key = true;
 
 
-    /**
-     * ÀàÖØ¹¹
-     * @param webView
-     * @param myWebChromeClient
-     * @param url
-     * @param webActivity
-     */
+
     public WebMain(WebView webView, MyWebChromeClient myWebChromeClient, String url, WebActivity webActivity) {
         this.webView = webView;
         this.url = url;
@@ -52,10 +39,10 @@ public class WebMain {
     }
 
     /**
-     * webveiewÉèÖÃ·½·¨
+     * webveiewè®¾ç½®æ–¹æ³•
      */
     public void initWebView() {
-        //½ÓÊÕÀ´×ÔjsµÄĞÅÏ¢£¨±¸ÓÃ£©
+        //æ¥æ”¶æ¥è‡ªjsçš„ä¿¡æ¯ï¼ˆå¤‡ç”¨ï¼‰
 
         //        main_webview.addJavascriptInterface(new Object()
 //        {
@@ -67,14 +54,14 @@ public class WebMain {
 //            }
 
 
-        // webView.getSettings().setBlockNetworkImage(true); //Í¼Æ¬¼ÓÔØÄ£Ê½£¬´ı²âÊÔ
+        // webView.getSettings().setBlockNetworkImage(true); //å›¾ç‰‡åŠ è½½æ¨¡å¼ï¼Œå¾…æµ‹è¯•
 
         webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setSupportMultipleWindows(false);
+        webView.getSettings().setSupportMultipleWindows(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setAppCacheEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
-        webView.getSettings().setBuiltInZoomControls(false);
+        webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setUserAgentString(webView.getSettings().getUserAgentString() + "; CustedAPP");
         webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
@@ -86,7 +73,7 @@ public class WebMain {
 
 
     /**
-     * »º´æÄ£Ê½ÇĞ»»
+     * ç¼“å­˜æ¨¡å¼åˆ‡æ¢
      */
     public void cache_mode_switch() {
 
@@ -101,7 +88,7 @@ public class WebMain {
 
 
     /**
-     * cookieÍ¬²½ÅäÖÃ
+     * cookieåŒæ­¥é…ç½®
      * @param context
      * @param url
      */
@@ -122,7 +109,7 @@ public class WebMain {
 
 
     /**
-     * Çå³ı»º´æ
+     * æ¸…é™¤ç¼“å­˜
      */
     public void clearWebViewCache() {
 //        context.deleteDatabase("WebView.db");
@@ -131,9 +118,14 @@ public class WebMain {
 
     }
 
+    public void set_load(String url)
+    {
+        webView.loadUrl(url);
+    }
+
 
     /**
-     * ¼ÓÔØurl·½·¨
+     * åŠ è½½urlæ–¹æ³•
      */
     public void onLoad() {
 
@@ -141,7 +133,7 @@ public class WebMain {
             webView.setWebViewClient(new WebViewClient() {
 
                 /**
-                 * ²»ÒªÌø×ªµ½ä¯ÀÀÆ÷
+                 * ä¸è¦è·³è½¬åˆ°æµè§ˆå™¨
                  * @param view
                  * @param request
                  * @return
@@ -152,33 +144,44 @@ public class WebMain {
                 }
 
                 /**
-                 * url¼ÓÔØÊ±µ÷ÓÃ
+                 * urlåŠ è½½æ—¶è°ƒç”¨
                  * @param view
                  * @param url
                  * @param favicon
                  */
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
-
-
                     super.onPageStarted(view, url, favicon);
                 }
 
 
                 /**
-                 * ¼ÓÔØweb×ÊÔ´Ê±µ÷ÓÃ
+                 * åŠ è½½webèµ„æºæ—¶è°ƒç”¨
                  * @param view
                  * @param url
                  */
                 @Override
                 public void onLoadResource(WebView view, String url) {
-                    synCookies(webactivity.getBaseContext(), url);
-                    cache_mode_switch();
                     super.onLoadResource(view, url);
+                    synCookies(webactivity.getBaseContext(), url);
+                    if(cache_switch_key)
+                    {
+                        cache_mode_switch();
+                        cache_switch_key = false;
+                    }
+
                 }
 
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+                    cache_switch_key = true;
+                    Log.e("---WebMain---","pageFinished");
+                }
+
+
                 /**
-                 * url¼ÓÔØ´íÎóÊ±µ÷ÓÃ
+                 * urlåŠ è½½é”™è¯¯æ—¶è°ƒç”¨
                  * @param view
                  * @param errorCode
                  * @param description

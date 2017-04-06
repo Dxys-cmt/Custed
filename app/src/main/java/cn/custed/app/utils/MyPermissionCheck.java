@@ -1,17 +1,9 @@
-package cn.edu.cust.m.custed.utils;
+package cn.custed.app.utils;
 
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.provider.SyncStateContract;
-import android.util.Log;
-import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import cn.edu.cust.m.custed.WebActivity;
+import cn.custed.app.WebActivity;
 
 /**
  * Created by dxys on 17/3/31.
@@ -28,7 +20,7 @@ public class MyPermissionCheck {
         this.webActivity = webActivity;
     }
 
-    public boolean isPermissionGranted(String permissionName, int questCo){
+    public boolean isPermissionGranted(String permissionName){
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
             return true;
         }

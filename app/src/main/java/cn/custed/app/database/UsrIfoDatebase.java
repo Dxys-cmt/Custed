@@ -1,4 +1,4 @@
-package cn.edu.cust.m.custed.database;
+package cn.custed.app.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.widget.Toast;
 
-import static cn.edu.cust.m.custed.MyConstant.DATABASE_TABNAME;
+import static cn.custed.app.MyConstant.DATABASE_TABNAME;
 
 /**
  *
@@ -74,7 +74,7 @@ public class UsrIfoDatebase {
     {
         helper = new DataBaseHelper(context,database_name);
         database = helper.getWritableDatabase();
-        if(query_data(ifoname).getAsString("ifovalue") == null) {
+        if(get_query_id(ifoname) == -1) {
             ContentValues contentvalues = new ContentValues();
             contentvalues.put("ifoname", ifoname);
             contentvalues.put("ifovalue", ifovalue);
@@ -91,9 +91,9 @@ public class UsrIfoDatebase {
     {
         helper = new DataBaseHelper(context,database_name);
         database = helper.getWritableDatabase();
-        if(query_data(ifoname).getAsInteger("id") != null)
+        if(get_query_id(ifoname) != -1)
         {
-            int id = query_data(ifoname).getAsInteger("id");
+            int id = get_query_id(ifoname);
             ContentValues rifovalue = new ContentValues();
             rifovalue.put("ifovalue",ifovalue);
             database.update(DATABASE_TABNAME,rifovalue,"_id="+String.valueOf(id),null);
@@ -110,7 +110,7 @@ public class UsrIfoDatebase {
     {
         helper = new DataBaseHelper(context,database_name);
         database = helper.getWritableDatabase();
-        if(query_data(ifoname).getAsInteger("id") != null)
+        if(get_query_id(ifoname) != -1)
         {
             int id = (int) query_data(ifoname).get("id");
             database.delete(DATABASE_TABNAME,"_id="+id,null);
@@ -143,5 +143,21 @@ public class UsrIfoDatebase {
 
         }
         return contentValues;
+    }
+    public Integer get_query_id(String ifoname)
+    {
+        int result = -1;
+        if(get_query_ifovalue(ifoname) != null)
+        result = query_data(ifoname).getAsInteger("id");
+        Log.e("-----",String.valueOf(result));
+        return result;
+    }
+
+    public String get_query_ifovalue(String ifoname)
+    {
+        String result;
+        result = query_data(ifoname).getAsString("ifovalue");
+        Log.e("-----","M:"+result);
+        return result;
     }
 }

@@ -1,10 +1,10 @@
-package cn.edu.cust.m.custed.database;
+package cn.custed.app.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import static cn.edu.cust.m.custed.MyConstant.DATABASE_VERSION;
+import static cn.custed.app.MyConstant.DATABASE_VERSION;
 
 /**
  * Created by dxys on 17/4/1.

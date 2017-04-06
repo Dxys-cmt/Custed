@@ -1,4 +1,4 @@
-package cn.edu.cust.m.custed.utils;
+package cn.custed.app.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;

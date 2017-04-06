@@ -1,27 +1,24 @@
-package cn.edu.cust.m.custed.webView;
+package cn.custed.app.webView;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
 import android.webkit.JsResult;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Toast;
 
-import cn.edu.cust.m.custed.WebActivity;
-import cn.edu.cust.m.custed.utils.MyPermissionCheck;
+import cn.custed.app.WebActivity;
+import cn.custed.app.utils.ImageEditUtils;
+import cn.custed.app.utils.MyPermissionCheck;
 
-import static cn.edu.cust.m.custed.MyConstant.FILECHOOSER_RESULTCODE;
-import static cn.edu.cust.m.custed.MyConstant.QUEST_CODE_READ_STORAGE;
+import static cn.custed.app.MyConstant.FILECHOOSER_RESULTCODE;
+import static cn.custed.app.MyConstant.QUEST_CODE_READ_STORAGE;
 
 /**
  * Created by dxys on 17/3/30.
@@ -65,8 +62,8 @@ public class MyWebChromeClient extends WebChromeClient {
     //4.1+
     public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
         my_upload_message = uploadMsg;
-        Toast.makeText(webActivity, "this3", Toast.LENGTH_SHORT).show();
-        open_file_choose_intent(acceptType);
+        new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
+//        open_file_choose_intent(acceptType);
     }
 
     //Android 5.0+
@@ -75,7 +72,8 @@ public class MyWebChromeClient extends WebChromeClient {
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
 
             my_upload_message_aboveL = filePathCallback;
-            open_file_choose_intent_aboveL(fileChooserParams.getAcceptTypes());
+        new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
+//            open_file_choose_intent_aboveL(fileChooserParams.getAcceptTypes());
 
         return true;
     }
@@ -95,17 +93,12 @@ public class MyWebChromeClient extends WebChromeClient {
 
     public void open_file_choose_intent_aboveL(String[] type)
     {
-        if(new MyPermissionCheck(webActivity).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE, QUEST_CODE_READ_STORAGE))
-        {
+        if(!new MyPermissionCheck(webActivity).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             i = new Intent(Intent.ACTION_GET_CONTENT);
             i.addCategory(Intent.CATEGORY_OPENABLE);
             i.setType(type[0]);
-            webActivity.start_intent(i,request_code);
-        }
-        else
-        {
-            webActivity.show_dialog("提示：","软件需要读取储存的权限，请授权。","确定",3);
-            my_upload_message_aboveL.onReceiveValue(null);
+            webActivity.start_intent(i, request_code);
+            webActivity.show_dialog("提示：", "软件需要读取储存的权限，请授权。", "确定", 3);
         }
     }
 

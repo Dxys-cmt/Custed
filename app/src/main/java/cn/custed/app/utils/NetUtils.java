@@ -1,4 +1,4 @@
-package cn.edu.cust.m.custed.utils;
+package cn.custed.app.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -6,7 +6,7 @@ import android.net.NetworkInfo;
 
 /**
  * Created by dxys on 17/3/29.
- * ÍøÂç×´Ì¬¼ì²é
+ * ç½‘ç»œçŠ¶æ€æ£€æŸ¥
  */
 
 public class NetUtils {

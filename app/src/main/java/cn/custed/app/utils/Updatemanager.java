@@ -1,4 +1,4 @@
-package cn.edu.cust.m.custed.utils;
+package cn.custed.app.utils;
 
 /**
  * Created by dxys on 17/3/29.
@@ -6,4 +6,5 @@ package cn.edu.cust.m.custed.utils;
  */
 
 public class Updatemanager {
+
 }
