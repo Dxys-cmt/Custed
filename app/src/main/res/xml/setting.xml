@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceCategory android:title="web设置"
+    android:key="websetting">
+    <Preference android:title="清除缓存"
+        android:summary="当前缓存大小："
+
+        android:key="claenCache"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="桌面课表设置"
+        android:key="widgetSetting">
+<Preference
+    android:title="刷新课表数据"
+    android:summary="上次更新时间："
+    android:key="refashWidget"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="其他" android:key="otherSetting">
+        <Preference android:title="检查更新"
+            android:summary="当前版本："
+            android:key="checkUpdata"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -16,7 +16,7 @@ import android.widget.ImageView;
  * Created by dxys on 17/4/3.
  */
 
-public class MyCircleImageView extends ImageView {
+public class MyCircleImageView extends android.support.v7.widget.AppCompatImageView {
     private Paint paint ;
 
     public MyCircleImageView(Context context) {
@@ -43,8 +43,9 @@ public class MyCircleImageView extends ImageView {
         Drawable drawable = getDrawable();
         if (null != drawable) {
             Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-            Bitmap b = getCircleBitmap(bitmap, 14);
-            final Rect rectSrc = new Rect(0, 0, b.getWidth(), b.getHeight());
+            Bitmap b = getCircleBitmap(bitmap);
+
+            final Rect rectSrc = new Rect(0, 0, b.getWidth(), b.getWidth());
             final Rect rectDest = new Rect(0,0,getWidth(),getHeight());
             paint.reset();
             canvas.drawBitmap(b, rectSrc, rectDest, paint);
@@ -54,14 +55,8 @@ public class MyCircleImageView extends ImageView {
         }
     }
 
-    /**
-     * 获取圆形图片方法
-     * @param bitmap
-     * @param pixels
-     * @return Bitmap
-     * @author caizhiming
-     */
-    private Bitmap getCircleBitmap(Bitmap bitmap, int pixels) {
+
+    private Bitmap getCircleBitmap(Bitmap bitmap) {
         Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
                 bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);

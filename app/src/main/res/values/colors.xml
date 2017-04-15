@@ -3,4 +3,10 @@
     <color name="colorPrimary">#3593f4</color>
     <color name="colorPrimaryDark">#3593f4</color>
     <color name="colorAccent">#3593f4</color>
+    <color name="color_nav_head_bg">#fbfbfb</color>
+
+    <!--二维码扫描组件  -->
+    <color name="result_view">#b0000000</color>
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="possible_result_points">#c0ffff00</color>
 </resources>

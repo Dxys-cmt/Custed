@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.widget.Toast;
 
+import static cn.custed.app.MyConstant.DATABASE_NAME;
 import static cn.custed.app.MyConstant.DATABASE_TABNAME;
 
 /**
@@ -17,9 +18,7 @@ import static cn.custed.app.MyConstant.DATABASE_TABNAME;
 public class UsrIfoDatebase {
 
     private Context context;
-    private String database_name;
-    private DataBaseHelper helper;
-    private SQLiteDatabase database;
+    static private SQLiteDatabase database;
 
 
 
@@ -27,14 +26,21 @@ public class UsrIfoDatebase {
     public UsrIfoDatebase(Context context,String database_name)
     {
         this.context = context;
-        this.database_name = database_name;
     }
 
 
+    private static SQLiteDatabase getDATABASE(Context context)
+    {
+        if(database == null)
+        {
+            DataBaseHelper helper = new DataBaseHelper(context, DATABASE_NAME);
+            database = helper.getWritableDatabase();
+        }
+        return database;
+    }
     public boolean is_datebase_tab_exist()
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getReadableDatabase();
+        database = getDATABASE(context);
         boolean result = false;
         Cursor cursor = null;
         try {
@@ -51,7 +57,6 @@ public class UsrIfoDatebase {
         catch (Exception e) {
             Log.e("UsrIfodatabase","isdatabaseexist");
         }
-        database.close();
         try {
             cursor.close();
         }catch (NullPointerException e)
@@ -61,19 +66,20 @@ public class UsrIfoDatebase {
         return result;
     }
 
+    public void close_datebase()
+    {
+        database.close();
+    }
+
     public void creat_tab()
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getReadableDatabase();
-        Toast.makeText(context, database_name, Toast.LENGTH_SHORT).show();
+        database = getDATABASE(context);
         database.execSQL("CREATE TABLE "+DATABASE_TABNAME+"(_id integer primary key autoincrement, ifoname TEXT, ifovalue TEXT);");
-        database.close();
     }
 
     public void insert_data(String ifoname,String ifovalue)
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getWritableDatabase();
+        database = getDATABASE(context);
         if(get_query_id(ifoname) == -1) {
             ContentValues contentvalues = new ContentValues();
             contentvalues.put("ifoname", ifoname);
@@ -84,49 +90,41 @@ public class UsrIfoDatebase {
         {
             update_data(ifoname,ifovalue);
         }
-        database.close();
     }
 
     public boolean update_data(String ifoname,String ifovalue)
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getWritableDatabase();
+        database = getDATABASE(context);
         if(get_query_id(ifoname) != -1)
         {
             int id = get_query_id(ifoname);
             ContentValues rifovalue = new ContentValues();
             rifovalue.put("ifovalue",ifovalue);
             database.update(DATABASE_TABNAME,rifovalue,"_id="+String.valueOf(id),null);
-            database.close();
             return true;
         }
         else
         {
-            database.close();
             return false;
         }
     }
     public boolean delete_data(String ifoname)
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getWritableDatabase();
+        database = getDATABASE(context);
         if(get_query_id(ifoname) != -1)
         {
             int id = (int) query_data(ifoname).get("id");
             database.delete(DATABASE_TABNAME,"_id="+id,null);
-            database.close();
             return true;
         }
         else
         {
-            database.close();
             return false;
         }
     }
-    public ContentValues query_data(String ifoname)
+    private ContentValues query_data(String ifoname)
     {
-        helper = new DataBaseHelper(context,database_name);
-        database = helper.getReadableDatabase();
+        database = getDATABASE(context);
         Cursor all_cursor = database.rawQuery("select * from "+DATABASE_TABNAME,null);
         ContentValues contentValues = new ContentValues();
         while (all_cursor.moveToNext())
@@ -142,6 +140,7 @@ public class UsrIfoDatebase {
             }
 
         }
+        all_cursor.close();
         return contentValues;
     }
     public Integer get_query_id(String ifoname)
@@ -149,7 +148,6 @@ public class UsrIfoDatebase {
         int result = -1;
         if(get_query_ifovalue(ifoname) != null)
         result = query_data(ifoname).getAsInteger("id");
-        Log.e("-----",String.valueOf(result));
         return result;
     }
 
@@ -157,7 +155,6 @@ public class UsrIfoDatebase {
     {
         String result;
         result = query_data(ifoname).getAsString("ifovalue");
-        Log.e("-----","M:"+result);
         return result;
     }
 }

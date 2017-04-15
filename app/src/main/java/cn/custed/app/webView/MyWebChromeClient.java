@@ -29,111 +29,76 @@ public class MyWebChromeClient extends WebChromeClient {
 
     private Intent i;
     private WebActivity webActivity;
-    private ValueCallback<Uri> my_upload_message;
+    private ValueCallback my_upload_message;
     private ValueCallback<Uri[]> my_upload_message_aboveL;
     private int request_code;
 
     /**
      * 类重构
+     *
      * @param webActivity
      */
-    public MyWebChromeClient(WebActivity webActivity)
-    {
+    public MyWebChromeClient(WebActivity webActivity) {
         this.webActivity = webActivity;
         this.request_code = FILECHOOSER_RESULTCODE;
     }
 
     /**
      * 处理文件上传
+     *
      * @param uploadMsg
      * @param acceptType
      */
     //4.0+
     public void openFileChooser(ValueCallback uploadMsg, String acceptType) {
-//        if (my_upload_message != null)
-//        {
-//            my_upload_message.onReceiveValue(null);
-//        }
-        Toast.makeText(webActivity, "this0", Toast.LENGTH_SHORT).show();
         my_upload_message = uploadMsg;
-        open_file_choose_intent(acceptType);
+        new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
     }
 
     //4.1+
     public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
         my_upload_message = uploadMsg;
         new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
-//        open_file_choose_intent(acceptType);
     }
 
     //Android 5.0+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-
-            my_upload_message_aboveL = filePathCallback;
-        new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
-//            open_file_choose_intent_aboveL(fileChooserParams.getAcceptTypes());
-
+        my_upload_message_aboveL = filePathCallback;
+        if (webActivity.getPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        {
+            new ImageEditUtils(webActivity).intent_MediaStore(FILECHOOSER_RESULTCODE);
+        }
+       else
+        {
+            value_callback_aboveL(null);
+            set_callback_value_aboveL(null);
+        }
         return true;
     }
 
-    /**
-     * 创建文件选择intent
-     * 下一个适配安卓L+
-     * @param type
-     */
-    public void open_file_choose_intent(String type)
-    {
-        i = new Intent(Intent.ACTION_GET_CONTENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType(type);
-        webActivity.start_intent(i,request_code);
-    }
-
-    public void open_file_choose_intent_aboveL(String[] type)
-    {
-        if(!new MyPermissionCheck(webActivity).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            i = new Intent(Intent.ACTION_GET_CONTENT);
-            i.addCategory(Intent.CATEGORY_OPENABLE);
-            i.setType(type[0]);
-            webActivity.start_intent(i, request_code);
-            webActivity.show_dialog("提示：", "软件需要读取储存的权限，请授权。", "确定", 3);
-        }
-    }
-
-    /**
-     * web返回值回调处理
-     * @param result
-     */
-    public void value_callback(Uri result)
-    {
+    public void value_callback(Uri result) {
         my_upload_message.onReceiveValue(result);
     }
 
 
-    /**
-     * web返回值设置
-     * @param valueCallback
-     */
-    public void set_callback_value(ValueCallback<Uri> valueCallback)
-    {
+    public void set_callback_value(ValueCallback<Uri> valueCallback) {
         this.my_upload_message = valueCallback;
     }
 
-    public void value_callback_aboveL(Uri[] resule)
-    {
+    public void value_callback_aboveL(Uri[] resule) {
         my_upload_message_aboveL.onReceiveValue(resule);
     }
 
-    public void set_callback_value_aboveL(ValueCallback<Uri[]> valueCallback)
-    {
+    public void set_callback_value_aboveL(ValueCallback<Uri[]> valueCallback) {
         this.my_upload_message_aboveL = valueCallback;
     }
 
 
     /**
      * 重写AlertDialog
+     *
      * @param view
      * @param url
      * @param message

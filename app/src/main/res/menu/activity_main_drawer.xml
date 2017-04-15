@@ -5,26 +5,39 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/nav_home"
-            android:title="主页" />
+            android:title="@string/go_main_page" />
         <item
             android:id="@+id/nav_qc"
             android:icon="@drawable/nav_qc"
-            android:title="二维码扫描" />
+            android:title="@string/qc_search" />
 
     </group>
 
-    <item android:title="其他">
+    <item android:title="@string/other">
         <menu>
+
+
+            <item
+                android:icon="@drawable/nav_otherset"
+                android:title=""/>
+
             <item
                 android:id="@+id/nav_settings"
                 android:icon="@drawable/nav_settings"
-                android:title="设置" />
+                android:title="@string/nav_setting" />
+
 
             <item
-                android:id="@+id/other_settings"
-                android:icon="@drawable/nav_otherset"
-                android:title="课表设置" />
+                android:id="@+id/nav_share"
+                android:icon="@drawable/nav_share"
+                android:title="分享我们"
+                />
 
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/nav_about"
+                android:title="关于我们"
+                />
         </menu>
     </item>
 </menu>

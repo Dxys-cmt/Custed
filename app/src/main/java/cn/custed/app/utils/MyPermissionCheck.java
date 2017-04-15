@@ -26,11 +26,7 @@ public class MyPermissionCheck {
         }
 
         int hasPermision = webActivity.check_Self_Permission(permissionName);
-        if (hasPermision != PackageManager.PERMISSION_GRANTED) {
-
-            return false;
-        }
-        return true;
+        return hasPermision == PackageManager.PERMISSION_GRANTED;
     }
 
 }

@@ -9,11 +9,13 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.annotation.StringDef;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -21,21 +23,18 @@ import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MenuItem;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
-import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cn.custed.app.ViewInit.NavBarListener;
+import cn.custed.app.utils.NetUtils;
 import cn.edu.cust.m.custed.R;
 import cn.custed.app.ViewInit.MyWebActivity;
 import cn.custed.app.database.UsrIfoDatebase;
@@ -46,21 +45,27 @@ import cn.custed.app.utils.MyPermissionCheck;
 import cn.custed.app.webView.MyWebChromeClient;
 import cn.custed.app.webView.WebMain;
 
-import static android.R.attr.listPreferredItemHeightSmall;
+import static cn.custed.app.MyConstant.APP_VISIONCODE;
 import static cn.custed.app.MyConstant.FILECHOOSER_RESULTCODE;
 import static cn.custed.app.MyConstant.FILECHOOSER_RESULTCODE_2;
-import static cn.custed.app.MyConstant.FIRST_START_PAGE_INDEX;
 import static cn.custed.app.MyConstant.FIRST_START_PAGE_NAME;
-import static cn.custed.app.MyConstant.FIRST_START_PAGE_SCHEDULE;
 import static cn.custed.app.MyConstant.NAV_HEADER_BACKGROUND;
 import static cn.custed.app.MyConstant.NAV_HEADER_BACKGROUND_VALUE;
+import static cn.custed.app.MyConstant.NAV_USR_IFO;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE_ID;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE_VALUE;
+import static cn.custed.app.MyConstant.NAV_USR_NAME;
 import static cn.custed.app.MyConstant.PHOTO_RESOULT;
 import static cn.custed.app.MyConstant.PHOTO_ZOOM;
-import static cn.custed.app.MyConstant.QUEST_CODE_READ_STORAGE;
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_KEY;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_ON;
+import static cn.custed.app.MyConstant.URL_GRADE;
+import static cn.custed.app.MyConstant.URL_INDEX;
+import static cn.custed.app.MyConstant.URL_SCHEDULE;
+import static cn.custed.app.MyConstant.URL_UPDATE_API;
+import static cn.custed.app.MyConstant.URL_UPDATE_APK;
+import static cn.custed.app.MyConstant.URL_USER;
 
 /**
  * Created by dxys on 17/3/29.
@@ -70,44 +75,48 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 public class WebActivity extends MyWebActivity {
 
     public String main_url;
-    private WebView main_webview;
+    public static String url;
+    public static WebView main_webview;
     private boolean finish_activity = false;
     private MyWebChromeClient myWebChromeClient;
-    private WebMain webMain;
     private UsrIfoDatebase usrIfoDatebase;
     private Uri imageUri;
     private LinearLayout nav_header;
     private DrawerLayout drawerLayout;
-    private NavBarListener navBarListener;
     private MyCircleImageView icon_image;
     private TextView usr;
     private TextView sign;
-    private Looper looper;
     public Handler handler;
-    private TextView web_test;
+    public ImageView error_image;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        Log.e("-------","start");
+
         usrIfoDatebase = super.getUsrIfoDatebase();
         setContentView(R.layout.activity_web);
 
         /**
          * 加载webview
          */
-        main_url = "http://m.cust.edu.cn/" + usrIfoDatebase.get_query_ifovalue(FIRST_START_PAGE_NAME);
+        if (getIntent().getAction().equals("android.intent.action.MYACTIVITY"))
+            main_url = URL_SCHEDULE;
+        else
+            main_url = "http://m.cust.edu.cn/" + usrIfoDatebase.get_query_ifovalue(FIRST_START_PAGE_NAME);
         main_webview = (WebView) findViewById(R.id.main_webView);
         myWebChromeClient = new MyWebChromeClient(this);
-        webMain = new WebMain(main_webview, myWebChromeClient, main_url, this);
+        WebMain webMain = new WebMain(main_webview, myWebChromeClient, main_url, this);
         webMain.initWebView();
         webMain.onLoad();
 
-        looper = Looper.getMainLooper();
+        Looper looper = Looper.getMainLooper();
         handler = new MyHandler(looper);
 
 
-        navBarListener = new NavBarListener(this);
+        NavBarListener navBarListener = new NavBarListener(this);
         drawerLayout = (DrawerLayout) findViewById(R.id.activity_web);
         SwitchCompat switchCompat = (SwitchCompat) findViewById(R.id.nav_switch);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -116,58 +125,78 @@ public class WebActivity extends MyWebActivity {
         icon_image = (MyCircleImageView) head_view.findViewById(R.id.nav_usr_image);
         usr = (TextView) head_view.findViewById(R.id.nav_usr_name);
         sign = (TextView) head_view.findViewById(R.id.nav_usr_sign);
-        web_test = (TextView) findViewById(R.id.web_test);
-        navBarListener.init_all_view(drawerLayout, navigationView, nav_header, switchCompat, icon_image, usr, sign, web_test);
+        error_image = (ImageView)findViewById(R.id.error_page);
+        navBarListener.init_all_view(drawerLayout, navigationView, nav_header, switchCompat, icon_image, usr, sign ,error_image);
 
 
-        if (!new MyPermissionCheck(this).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE))
-            show_dialog("提示：", "软件需要读取储存的权限，请授权。", "确定", 3);
+        if (NetUtils.get_content_type(this) == NetUtils.WIFI)
+        new FileUtils().load_from_url(this,URL_UPDATE_API,null,13);
 
 
     }
 
-    private class MyHandler extends Handler
+
+    public boolean getPermission(String permissionName)
     {
-        public MyHandler(Looper looper)
+        boolean result = false;
+        if (permissionName.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
         {
+            if (!new MyPermissionCheck(this).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+            {
+                show_dialog("提示：", "软件需要读取储存的权限，请授权。", "确定", 3);
+                result = false;
+            }
+
+            else result =true;
+        }
+        return result;
+    }
+
+
+    private class MyHandler extends Handler {
+        MyHandler(Looper looper) {
             super(looper);
         }
+
         public void handleMessage(Message msg) {
-            switch (msg.what)
-            {
-                case NAV_USR_IMAGE_ID:
-                {
+            switch (msg.what) {
+                case NAV_USR_IMAGE_ID: {
                     set_usr_image();
                     break;
                 }
-                case 11:
-                {
+                case 11: {
 
-                    String ifo = msg.obj.toString();
-                    String ifo1,ifo2;
-                    Pattern pattern = Pattern.compile(".*custid.",Pattern.DOTALL);
-                    Matcher matcher = pattern.matcher(ifo);
-                    ifo1 = matcher.replaceAll("");
-                    pattern = Pattern.compile(";.*",Pattern.DOTALL);
-                    matcher = pattern.matcher(ifo1);
-
-                    if(matcher.replaceAll("") != null)
+                    if(msg.obj != null)
                     {
-                        sign.setText("学号："+matcher.replaceAll(""));
+                        String[] ifo = (String[]) msg.obj;
+                        usr.setText(ifo[1]);
+                        sign.setText(ifo[0]);
+                        usrIfoDatebase.insert_data(NAV_USR_NAME,ifo[1]);
+                        usrIfoDatebase.insert_data(NAV_USR_IFO,ifo[0]);
                     }
 
+                    break;
+                }
+                case 13:
+                {
+                    if (msg.obj != null)
+                    {
+                        String html = msg.obj.toString();
+                        Log.e("WebActivity","update_api is:"+html);
+                        int check_vison = Integer.parseInt(html);
+                        if (check_vison > APP_VISIONCODE)
+                        {
+                            show_dialog_2button("提示","检测到有新的版本是否更新？","好的","暂时不要",13);
+                        }
+                    }
                 }
             }
 
         }
     }
 
-    /**
-     * 文件上传intent启动回调方法
-     *
-     * @param intent
-     * @param request_code
-     */
+
+
     public void start_intent(Intent intent, int request_code) {
         startActivityForResult(Intent.createChooser(intent, "File Chooser"), request_code);
     }
@@ -188,19 +217,13 @@ public class WebActivity extends MyWebActivity {
 
     public void set_usr_image() {
 
-        if (new File(FileUtils.get_my_imagedir_path() + NAV_USR_IMAGE_VALUE).exists()) {
+        if (new File(FileUtils.get_my_imagedir_path(this) + NAV_USR_IMAGE_VALUE).exists()) {
             usrIfoDatebase.insert_data(NAV_USR_IMAGE, NAV_USR_IMAGE_VALUE);
-            icon_image.setImageDrawable(Drawable.createFromPath(FileUtils.get_my_imagedir_path() + NAV_USR_IMAGE_VALUE));
+            icon_image.setImageDrawable(Drawable.createFromPath(FileUtils.get_my_imagedir_path(this) + NAV_USR_IMAGE_VALUE));
         }
     }
 
-    /**
-     * dialog启动回调方法
-     *
-     * @param title
-     * @param message
-     * @param s_button1
-     */
+
     public void show_dialog(String title, String message, String s_button1, final int action_check) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(WebActivity.this);
@@ -231,9 +254,6 @@ public class WebActivity extends MyWebActivity {
         builder.setNegativeButton(s_button2, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (action_check == 4) {
-                    finish();
-                }
                 dialog.dismiss();
             }
         });
@@ -274,8 +294,17 @@ public class WebActivity extends MyWebActivity {
                 break;
             }
             case 5: {
+                if (getPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
                 new ImageEditUtils(this).intent_MediaStore(PHOTO_ZOOM);
                 break;
+            }
+            case 13 :
+            {
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.VIEW");
+                intent.setData(Uri.parse(URL_UPDATE_APK));
+                startActivity(intent);
+
             }
             default: {
                 dialog.dismiss();
@@ -285,20 +314,17 @@ public class WebActivity extends MyWebActivity {
 
     }
 
-    /**
-     * intent 返回结果处理
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param intent
-     */
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (!new File(FileUtils.get_my_imagedir_path()).exists())
-            new File(FileUtils.get_my_imagedir_path()).mkdirs();
+        if (!new File(FileUtils.get_my_imagedir_path(this)).exists())
+            new File(FileUtils.get_my_imagedir_path(this)).mkdirs();
+
+        if (!new File(FileUtils.get_my_files_path(this)).exists())
+            new File(FileUtils.get_my_files_path(this)).mkdirs();
+
 
         switch (requestCode) {
             case FILECHOOSER_RESULTCODE: {
@@ -306,35 +332,21 @@ public class WebActivity extends MyWebActivity {
                     onActivityResultAboveL(requestCode, resultCode, intent);
                 } else {
 
-                    imageUri = null;
+
                     Uri result = null;
                     if (intent != null && intent.getData() != null) {
-                        new ImageEditUtils(this).startPhotoZoom(intent.getData(), 200, 200, FILECHOOSER_RESULTCODE_2);
                         imageUri = intent.getData();
+                        FileUtils.copyFile(FileUtils.getRealOPathForUri(imageUri,this),FileUtils.get_my_sd_files_path(this)+"temp.png");
+                        imageUri = FileUtils.getUriForPath(FileUtils.get_my_sd_files_path(this)+"temp.png",this);
+                        new ImageEditUtils(this).startPhotoZoom(imageUri, 200, 200, FILECHOOSER_RESULTCODE_2);
                     }
                     myWebChromeClient.value_callback(result);
                     myWebChromeClient.set_callback_value(null);
-                    webMain.clearWebViewCache();
-                }
-                break;
-            }
-            case PHOTO_ZOOM: {
-                if (intent != null && intent.getData() != null) {
-                    imageUri = null;
-                    new ImageEditUtils(this).startPhotoZoom(intent.getData(), 840, 600, PHOTO_RESOULT);
-                    imageUri = intent.getData();
-                }
-                break;
-            }
-            case PHOTO_RESOULT: {
-                if (intent != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    new FileUtils().copyFile(imageUri.getPath(), FileUtils.get_my_imagedir_path() + NAV_HEADER_BACKGROUND_VALUE);
-                    usrIfoDatebase.insert_data(NAV_HEADER_BACKGROUND, NAV_HEADER_BACKGROUND_VALUE);
-                    nav_header.setBackground(ImageEditUtils.get_my_dir_image(NAV_HEADER_BACKGROUND_VALUE));
                 }
                 break;
             }
             case FILECHOOSER_RESULTCODE_2: {
+                usrIfoDatebase.update_data(RESET_NAV_IFO_KEY,RESET_NAV_IFO_ON);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     onActivityResultAboveL(requestCode, resultCode, intent);
                 } else {
@@ -342,24 +354,36 @@ public class WebActivity extends MyWebActivity {
                     Uri result = null;
                     if (intent != null && intent.getData() != null) {
                         result = imageUri;
+                        usrIfoDatebase.update_data(RESET_NAV_IFO_KEY,RESET_NAV_IFO_ON);
                     }
                     myWebChromeClient.value_callback(result);
                     myWebChromeClient.set_callback_value(null);
-                    webMain.clearWebViewCache();
                 }
                 break;
             }
+            case PHOTO_ZOOM: {
+                if (intent != null && intent.getData() != null) {
+                    imageUri = intent.getData();
+                    FileUtils.copyFile(FileUtils.getRealOPathForUri(imageUri,this), FileUtils.get_my_sd_files_path(this) + NAV_HEADER_BACKGROUND_VALUE);
+                    imageUri = FileUtils.getUriForPath(FileUtils.get_my_sd_files_path(this) + NAV_HEADER_BACKGROUND_VALUE,this);
+                    new ImageEditUtils(this).startPhotoZoom(imageUri, 840, 600, PHOTO_RESOULT);
+                }
+                break;
+            }
+            case PHOTO_RESOULT: {
+                if (intent != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+
+                    FileUtils.copyFile(FileUtils.getRealOPathForUri(imageUri,this),FileUtils.get_my_imagedir_path(this)+NAV_HEADER_BACKGROUND_VALUE);
+                    usrIfoDatebase.insert_data(NAV_HEADER_BACKGROUND, NAV_HEADER_BACKGROUND_VALUE);
+                    nav_header.setBackground(ImageEditUtils.get_my_dir_image(NAV_HEADER_BACKGROUND_VALUE,this));
+                }
+                break;
+            }
+
         }
 
     }
 
-    /**
-     * intent返回结果处理for安卓L+
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param intent
-     */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void onActivityResultAboveL(int requestCode, int resultCode, Intent intent) {
 
@@ -386,6 +410,8 @@ public class WebActivity extends MyWebActivity {
                     }
                     if (results != null) {
                         imageUri = results[0];
+                        FileUtils.copyFile(FileUtils.getRealOPathForUri(imageUri,this),FileUtils.get_my_sd_files_path(this)+"temp.png");
+                        imageUri = FileUtils.getUriForPath(FileUtils.get_my_sd_files_path(this)+"temp.png",this);
                         new ImageEditUtils(this).startPhotoZoom(imageUri, 200, 200, FILECHOOSER_RESULTCODE_2);
                     } else {
                         myWebChromeClient.value_callback_aboveL(null);
@@ -404,12 +430,12 @@ public class WebActivity extends MyWebActivity {
                 Uri[] results = null;
                 if (intent != null && imageUri != null) {
                     results = new Uri[]{imageUri};
+                    usrIfoDatebase.update_data(RESET_NAV_IFO_KEY,RESET_NAV_IFO_ON);
+                    Log.e("hase","234567");
                 }
-
 
                 myWebChromeClient.value_callback_aboveL(results);
                 myWebChromeClient.set_callback_value_aboveL(null);
-                webMain.clearWebViewCache();
                 break;
             }
         }
@@ -423,9 +449,12 @@ public class WebActivity extends MyWebActivity {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (!new File(FileUtils.get_my_imagedir_path()).exists())
-            new File(FileUtils.get_my_imagedir_path()).mkdirs();
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (!new File(FileUtils.get_my_imagedir_path(this)).exists())
+            new File(FileUtils.get_my_imagedir_path(this)).mkdirs();
+
+        if (!new File(FileUtils.get_my_files_path(this)).exists())
+            new File(FileUtils.get_my_files_path(this)).mkdirs();
 
 
         if (grantResults.length == 0) {
@@ -433,10 +462,8 @@ public class WebActivity extends MyWebActivity {
         }
         switch (requestCode) {
             case 2: {
-                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                } else {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "已经授予权限！", Toast.LENGTH_SHORT).show();
-
                 }
                 break;
             }
@@ -455,53 +482,57 @@ public class WebActivity extends MyWebActivity {
         }
     }
 
-    /**
-     * 返回键截获处理
-     *
-     * @param keyCode
-     * @param event
-     * @return
-     */
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode != KeyEvent.KEYCODE_VOLUME_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK) && main_webview.canGoBack() && main_webview.getUrl().indexOf("index.cc") == -1) {
+    public void onBackPressed() {
 
-            main_webview.goBack();
-            return true;
-
-        } else {
-            if (finish_activity) {
-                finish_activity = false;
-                finish();
+        if(drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.closeDrawer(GravityCompat.START);
+        else {
+            if (main_webview.canGoBack() && !(main_webview.getUrl().equals(URL_GRADE) || main_webview.getUrl().equals(URL_INDEX) || main_webview.getUrl().equals(URL_SCHEDULE) || main_webview.getUrl().equals(URL_USER))) {
+                main_webview.goBack();
             } else {
-                Toast.makeText(WebActivity.this, "再按一次返回键软件将退出！", Toast.LENGTH_SHORT).show();
-                finish_activity = true;
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        finish_activity = false;
-                    }
-                }, 1500);
+                if (finish_activity) {
+                    finish_activity = false;
+                    finish();
+                } else {
+                    Toast.makeText(WebActivity.this, "再按一次返回键软件将退出！", Toast.LENGTH_SHORT).show();
+                    finish_activity = true;
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish_activity = false;
+                        }
+                    }, 1500);
+                }
             }
-            return true;
         }
+
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (!new File(FileUtils.get_my_imagedir_path()).exists())
-            new File(FileUtils.get_my_imagedir_path()).mkdirs();
-        if (!new MyPermissionCheck(this).isPermissionGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE))
-            show_dialog("提示：", "软件需要读取储存的权限，请授权。", "确定", 3);
+
+        if(url != null)
+        {
+            main_webview.loadUrl(url);
+            url = null;
+        }
+
+        Log.e("onRestart","action is: "+getIntent().getAction());
+        if (getUsrIfoDatebase().get_query_ifovalue(RESET_NAV_IFO_KEY).equals(RESET_NAV_IFO_ON) && CookieManager.getInstance().getCookie(URL_USER) != null && CookieManager.getInstance().getCookie(URL_USER).contains("custedcid"))
+        {
+            new FileUtils().load_from_url(this,"http://m.cust.edu.cn/pic_uid_avatar.jpg",FileUtils.get_my_imagedir_path(this)+NAV_USR_IMAGE_VALUE,NAV_USR_IMAGE_ID);
+        }
 
     }
 
-    public void set_reload(String url)
-    {
+
+
+    public void set_reload(String url) {
         main_webview.loadUrl(url);
     }
+
     /**
      * 防止缓存溢出
      */

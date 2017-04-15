@@ -4,6 +4,10 @@
     <file url="file://$PROJECT_DIR$/app/src/main/java/cn/custed/app/utils/NetUtils.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/cn/custed/app/webView/MyWebChromeClient.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/cn/custed/app/webView/WebMain.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/zxing/camera/CameraConfigurationManager.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/zxing/camera/FlashlightManager.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/zxing/decoding/DecodeThread.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/zxing/view/ViewfinderView.java" charset="GBK" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

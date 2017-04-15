@@ -1,7 +1,9 @@
 package cn.custed.app.ViewInit;
 
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -15,30 +17,33 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
+import cn.custed.app.MipcaActivityCapture;
+import cn.custed.app.SettingsActivity;
 import cn.custed.app.WebActivity;
 import cn.custed.app.database.UsrIfoDatebase;
-import cn.custed.app.MyConstant;
 import cn.custed.app.utils.FileUtils;
 import cn.custed.app.utils.ImageEditUtils;
-import cn.custed.app.webView.WebMain;
+import cn.custed.app.utils.NetUtils;
 import cn.edu.cust.m.custed.R;
 
-import static cn.custed.app.MyConstant.DATABASE_NAME;
 import static cn.custed.app.MyConstant.FIRST_START_PAGE_INDEX;
 import static cn.custed.app.MyConstant.FIRST_START_PAGE_NAME;
 import static cn.custed.app.MyConstant.FIRST_START_PAGE_SCHEDULE;
 import static cn.custed.app.MyConstant.NAV_HEADER_BACKGROUND;
 import static cn.custed.app.MyConstant.NAV_HEADER_BACKGROUND_VALUE;
+import static cn.custed.app.MyConstant.NAV_USR_IFO;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE_ID;
 import static cn.custed.app.MyConstant.NAV_USR_IMAGE_VALUE;
+import static cn.custed.app.MyConstant.NAV_USR_NAME;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_KEY;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_OFF;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_ON;
+import static cn.custed.app.MyConstant.URL_USER;
 
 
 /**
@@ -48,32 +53,19 @@ import static cn.custed.app.MyConstant.NAV_USR_IMAGE_VALUE;
 public class NavBarListener implements NavigationView.OnNavigationItemSelectedListener {
     private WebActivity webActivity;
     private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
-    private LinearLayout linearLayout;
-    private SwitchCompat switchCompat;
-    private ImageView imageView;
-    private TextView usr;
-    private TextView sign;
-    private TextView web_test;
-    UsrIfoDatebase usrIfoDatebase;
+    private UsrIfoDatebase usrIfoDatebase;
+
 
     public NavBarListener(WebActivity webActivity)
     {
         this.webActivity = webActivity;
     }
 
-    public void init_all_view(DrawerLayout drawerLayout, NavigationView navigationView, LinearLayout linearLayout, SwitchCompat switchCompat, ImageView imageView, TextView usr, TextView sign, final TextView web_test)
+    public void init_all_view(final DrawerLayout drawerLayout, NavigationView navigationView, LinearLayout linearLayout, SwitchCompat switchCompat, ImageView imageView, TextView usr, TextView sign, final ImageView error_image)
     {
 
         this.drawerLayout = drawerLayout;
-        this.navigationView = navigationView;
-        this.linearLayout = linearLayout;
-        this.switchCompat = switchCompat;
-        this.imageView = imageView;
-        this.usr = usr;
-        this.sign = sign;
-        this.web_test = web_test;
-        usrIfoDatebase = new UsrIfoDatebase(webActivity,DATABASE_NAME);
+        usrIfoDatebase = webActivity.getUsrIfoDatebase();
 
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -90,20 +82,40 @@ public class NavBarListener implements NavigationView.OnNavigationItemSelectedLi
         });
 
 
-        if(usrIfoDatebase.get_query_ifovalue(NAV_HEADER_BACKGROUND) != null && new File(FileUtils.get_my_imagedir_path()+NAV_HEADER_BACKGROUND_VALUE).exists())
+        if(usrIfoDatebase.get_query_ifovalue(NAV_HEADER_BACKGROUND) != null && new File(FileUtils.get_my_imagedir_path(webActivity)+NAV_HEADER_BACKGROUND_VALUE).exists())
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                linearLayout.setBackground(ImageEditUtils.get_my_dir_image(NAV_HEADER_BACKGROUND_VALUE));
+                linearLayout.setBackground(ImageEditUtils.get_my_dir_image(NAV_HEADER_BACKGROUND_VALUE,webActivity));
             }
         }
-
-
-        if (usrIfoDatebase.get_query_ifovalue(NAV_USR_IMAGE) != null && new File(FileUtils.get_my_imagedir_path()+NAV_USR_IMAGE_VALUE).exists())
+        else
         {
-            Log.i("------","rrrrrrr");
-            imageView.setImageDrawable(ImageEditUtils.get_my_dir_image(NAV_USR_IMAGE_VALUE));
+            linearLayout.setBackgroundResource(R.drawable.nav_head_background);
         }
 
+
+        if (usrIfoDatebase.get_query_ifovalue(NAV_USR_IMAGE) != null && new File(FileUtils.get_my_imagedir_path(webActivity)+NAV_USR_IMAGE_VALUE).exists())
+        {
+            imageView.setImageDrawable(ImageEditUtils.get_my_dir_image(NAV_USR_IMAGE_VALUE,webActivity));
+        }
+
+        if (usrIfoDatebase.get_query_ifovalue(NAV_USR_NAME) != null)
+        {
+            usr.setText(usrIfoDatebase.get_query_ifovalue(NAV_USR_NAME));
+        }
+
+        if (usrIfoDatebase.get_query_ifovalue(NAV_USR_IFO) != null)
+        {
+            sign.setText(usrIfoDatebase.get_query_ifovalue(NAV_USR_IFO));
+        }
+
+        error_image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                webActivity.set_reload(webActivity.main_webview.getUrl());
+                error_image.setVisibility(View.INVISIBLE);
+            }
+        });
 
         linearLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -113,29 +125,14 @@ public class NavBarListener implements NavigationView.OnNavigationItemSelectedLi
             }
         });
 
-        drawerLayout.setDrawerListener(new DrawerLayout.DrawerListener() {
-
+        imageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onDrawerOpened(View drawerView) {
-
-                if(CookieManager.getInstance().getCookie("http://m.cust.edu.cn/user.cc").length() > 30)
-                {
-                    FileUtils.load_from_url(webActivity,"http://m.cust.edu.cn/pic_uid_avatar.jpg",FileUtils.get_my_imagedir_path()+NAV_USR_IMAGE_VALUE,NAV_USR_IMAGE_ID);
-
-                    FileUtils.load_from_url(webActivity,"http://m.cust.edu.cn/user.cc",null,11);
-                }
-                else
-                    Log.e("-----","H:"+CookieManager.getInstance().getCookie("http://m.cust.edu.cn/user.cc"));
-
+            public void onClick(View v) {
+                webActivity.set_reload(URL_USER);
+                drawerLayout.closeDrawer(GravityCompat.START);
             }
-
-            @Override
-            public void onDrawerSlide(View drawerView, float slideOffset) {}
-            @Override
-            public void onDrawerClosed(View drawerView) {}
-            @Override
-            public void onDrawerStateChanged(int newState) {}
         });
+
     }
 
     @Override
@@ -145,51 +142,39 @@ public class NavBarListener implements NavigationView.OnNavigationItemSelectedLi
         switch (item_id) {
             case R.id.nav_home: {
                 webActivity.set_reload("http://m.cust.edu.cn/index.cc");
+                drawerLayout.closeDrawer(GravityCompat.START);
                 break;
             }
             case R.id.nav_qc: {
 
+                Intent intent = new Intent();
+                intent.setClass(webActivity, MipcaActivityCapture.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                    webActivity.startActivity(intent);
                 break;
             }
             case R.id.nav_settings: {
-                String test  = CookieManager.getInstance().getCookie("http://m.cust.edu.cn/user.cc");
-                Log.e("-----","H:"+test);
+                Intent intent = new Intent();
+                intent.setClass(webActivity, SettingsActivity.class);
+                webActivity.startActivity(intent);
                 break;
             }
+            case R.id.nav_share:
+            {
+                Intent intent=new Intent(Intent.ACTION_SEND);
+                intent.setType("image/*");
+//                File(Environment.getExternalStorageDirectory()+"/name.png");
+
+//                Uri uri = Uri.fromFile(f); intent.putExtra(Intent.EXTRA_STREAM, uri);
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Share");
+                intent.putExtra(Intent.EXTRA_TEXT, "I have successfully share my message through my app");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                webActivity.startActivity(Intent.createChooser(intent, webActivity.getTitle()));
+            }
+
         }
-        drawerLayout.closeDrawer(GravityCompat.START);
+
         return true;
-    }
-
-
-    private String getHtml(String Url) throws Exception
-    {
-        URL url = new URL(Url);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.addRequestProperty("Cookie",CookieManager.getInstance().getCookie("http://m.cust.edu.cn/user.cc"));
-        conn.setConnectTimeout(6 * 1000);
-        conn.setRequestMethod("GET");
-        if (conn.getResponseCode() == 200) {
-            InputStream inputStream = conn.getInputStream();
-            byte[] data = readStream(inputStream);
-            String html = new String(data, "utf-8");
-            return html;
-        }
-        return null;
-    }
-
-    private byte[] readStream(InputStream inputStream) throws Exception
-    {
-        byte[] buffer = new byte[1024];
-        int len = -1;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        while ((len = inputStream.read(buffer)) != -1)
-        {
-            byteArrayOutputStream.write(buffer, 0, len);
-        }
-        inputStream.close();
-        byteArrayOutputStream.close();
-        return byteArrayOutputStream.toByteArray();
     }
 
 

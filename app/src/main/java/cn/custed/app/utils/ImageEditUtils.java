@@ -1,5 +1,6 @@
 package cn.custed.app.utils;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -89,9 +90,10 @@ public class ImageEditUtils {
         return inSampleSize;
     }
 
-    public static Drawable get_my_dir_image(String iamge_name)
+    public static Drawable get_my_dir_image(String iamge_name, Context context)
     {
-        return Drawable.createFromPath(FileUtils.get_my_imagedir_path()+iamge_name);
+        Log.e("5678","56789"+FileUtils.get_my_imagedir_path(context));
+        return Drawable.createFromPath(FileUtils.get_my_imagedir_path(context)+iamge_name);
     }
 
 

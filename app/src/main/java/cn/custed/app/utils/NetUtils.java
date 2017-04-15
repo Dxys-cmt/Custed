@@ -11,10 +11,13 @@ import android.net.NetworkInfo;
 
 public class NetUtils {
 
+    public static final int WIFI = 1;
+    public static final int MOBLIE = 2;
+
     public static boolean isNetworkAvailable(Context context) {
-        ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivity != null) {
-            NetworkInfo info = connectivity.getActiveNetworkInfo();
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo info = connectivityManager.getActiveNetworkInfo();
             if (info != null && info.isConnected()) {
                 if (info.getState() == NetworkInfo.State.CONNECTED) {
                     return true;
@@ -22,5 +25,28 @@ public class NetUtils {
             }
         }
         return false;
+    }
+
+    public static int get_content_type(Context context)
+    {
+        int content_type = 0;
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (connectivityManager != null)
+        {
+            NetworkInfo activeInfo = connectivityManager.getActiveNetworkInfo();
+            if (activeInfo != null && activeInfo.isConnected())
+            {
+                if (activeInfo.getType() == ConnectivityManager.TYPE_WIFI)
+                {
+                    content_type = WIFI;
+                }
+                else if (activeInfo.getType() == ConnectivityManager.TYPE_MOBILE)
+                {
+                    content_type = MOBLIE;
+                }
+            }
+        }
+return content_type;
     }
 }

@@ -1,6 +1,23 @@
 <resources>
     <string name="app_name">Custed</string>
-    <string name="nonet_dialog_title">提示！</string>
-    <string name="nonet_dialog_message">无网络连接，请检查网络设置！</string>
-    <string name="nonet_dialog_button1">重试</string>
+    <string name="_123">123</string>
+    <string name="class_first_page">将课表设为首页</string>
+    <string name="custed">Custed</string>
+    <string name="preview_day">前一天</string>
+    <string name="next_day">后一天</string>
+    <string name="custed_widget">Custed</string>
+    <string name="nav_sing">你的大学生活助理</string>
+    <string name="go_main_page">主页</string>
+    <string name="qc_search">二维码扫描</string>
+    <string name="other">其他</string>
+    <string name="nav_setting">软件设置</string>
+    <string name="class_setting">课表设置</string>
+
+    <string name="scan_text">将二维码放入框内, 即可自动扫描</string>
+    <string name="options">操作</string>
+    <string name="title_activity_settings">设置</string>
+
+
+
+
 </resources>

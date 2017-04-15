@@ -14,8 +14,21 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import cn.custed.app.WebActivity;
+import cn.custed.app.database.UsrIfoDatebase;
+import cn.custed.app.utils.FileUtils;
 import cn.custed.app.utils.NetUtils;
 import cn.edu.cust.m.custed.R;
+
+import static cn.custed.app.MyConstant.CLASS_DATA_VALUE;
+import static cn.custed.app.MyConstant.DATABASE_NAME;
+import static cn.custed.app.MyConstant.NAV_USR_IMAGE_ID;
+import static cn.custed.app.MyConstant.NAV_USR_IMAGE_VALUE;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_KEY;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_OFF;
+import static cn.custed.app.MyConstant.RESET_NAV_IFO_ON;
+import static cn.custed.app.MyConstant.URL_INDEX;
+import static cn.custed.app.MyConstant.URL_SCHEDULE;
+import static cn.custed.app.MyConstant.URL_USER;
 
 /**
  * Created by dxys on 17/3/29.
@@ -27,8 +40,9 @@ public class WebMain {
     private String url;
     private MyWebChromeClient myWebChromeClient;
     private WebActivity webactivity;
-    private boolean cache_switch_key = true;
-
+    private String cache_switch_key = "";
+    private String TAG = "WebMain.java";
+    private static boolean reset = true;
 
 
     public WebMain(WebView webView, MyWebChromeClient myWebChromeClient, String url, WebActivity webActivity) {
@@ -60,6 +74,7 @@ public class WebMain {
         webView.getSettings().setSupportMultipleWindows(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setAppCacheEnabled(true);
+        webView.getSettings().setAppCachePath(webactivity.getCacheDir()+"mwebview_caceh");
         webView.getSettings().setDatabaseEnabled(true);
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setAllowFileAccess(true);
@@ -108,66 +123,52 @@ public class WebMain {
     }
 
 
-    /**
-     * 清除缓存
-     */
-    public void clearWebViewCache() {
-//        context.deleteDatabase("WebView.db");
-        webactivity.deleteDatabase("WebViewCache.db");
-//        String cacheDirPath = ().getAbsolutePath()+APP_CACAHE_DIRNAME;
 
-    }
-
-    public void set_load(String url)
-    {
-        webView.loadUrl(url);
-    }
-
-
-    /**
-     * 加载url方法
-     */
     public void onLoad() {
 
         try {
             webView.setWebViewClient(new WebViewClient() {
 
-                /**
-                 * 不要跳转到浏览器
-                 * @param view
-                 * @param request
-                 * @return
-                 */
+
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                    return true;
+                    Log.e(TAG,"load;"+url);
+                    return false;
                 }
 
-                /**
-                 * url加载时调用
-                 * @param view
-                 * @param url
-                 * @param favicon
-                 */
+
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
                     super.onPageStarted(view, url, favicon);
+                    Log.e(TAG,"PageStart"+webView.getUrl());
                 }
 
 
-                /**
-                 * 加载web资源时调用
-                 * @param view
-                 * @param url
-                 */
                 @Override
                 public void onLoadResource(WebView view, String url) {
                     super.onLoadResource(view, url);
                     synCookies(webactivity.getBaseContext(), url);
-                    if(cache_switch_key)
+                    if(!view.getUrl().equals(cache_switch_key))
                     {
                         cache_mode_switch();
-                        cache_switch_key = false;
+                        cache_switch_key = view.getUrl();
+                        Log.e(TAG,"setcache:"+webView.getUrl());
+                        if(NetUtils.isNetworkAvailable(webactivity))
+                        {
+                            if (reset && webactivity.getUsrIfoDatebase().get_query_ifovalue(RESET_NAV_IFO_KEY).equals(RESET_NAV_IFO_ON) && CookieManager.getInstance().getCookie(URL_USER) != null && CookieManager.getInstance().getCookie(URL_USER).contains("custedcid"))
+                            {
+                                reset = false;
+                                new FileUtils().load_from_url(webactivity,"http://m.cust.edu.cn/schedule.html",FileUtils.get_my_files_path(webactivity)+CLASS_DATA_VALUE,12);
+                                new FileUtils().load_from_url(webactivity,"http://m.cust.edu.cn/pic_uid_avatar.jpg",FileUtils.get_my_imagedir_path(webactivity)+NAV_USR_IMAGE_VALUE,NAV_USR_IMAGE_ID);
+                                new FileUtils().load_from_url(webactivity,URL_USER,null,11);
+                                webactivity.getUsrIfoDatebase().update_data(RESET_NAV_IFO_KEY,RESET_NAV_IFO_OFF);
+                            }
+                            if(webView.getUrl().equals("http://m.cust.edu.cn/login.html"))
+                            {
+                                new UsrIfoDatebase(webactivity,DATABASE_NAME).update_data(RESET_NAV_IFO_KEY,RESET_NAV_IFO_ON);
+                                reset = true;
+                            }
+                        }
                     }
 
                 }
@@ -175,22 +176,14 @@ public class WebMain {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
-                    cache_switch_key = true;
-                    Log.e("---WebMain---","pageFinished");
                 }
 
 
-                /**
-                 * url加载错误时调用
-                 * @param view
-                 * @param errorCode
-                 * @param description
-                 * @param failingUrl
-                 */
+
                 @Override
                 public void onReceivedError(WebView view, int errorCode,
                                             String description, String failingUrl) {
-                    webactivity.show_dialog(webactivity.getString(R.string.nonet_dialog_title), webactivity.getString(R.string.nonet_dialog_message), webactivity.getString(R.string.nonet_dialog_button1),1);
+                    webactivity.error_image.setVisibility(View.VISIBLE);
                 }
 
             });
@@ -200,7 +193,6 @@ public class WebMain {
             webView.loadUrl(url);
         } catch (Exception e) {
             Log.e("onLoad", "loaderror!");
-            return;
         }
     }
 
